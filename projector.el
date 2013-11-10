@@ -1,4 +1,4 @@
-;;;; projector.el --- a lightweight Emacs library for managing project/repository-aware shell and shell command buffers.
+;;; projector.el --- Lightweight library for managing project/repository-aware shell and command buffers
 ;;
 ;; Copyright 2013 Justin Talbott
 ;;
@@ -7,13 +7,16 @@
 ;; Version: 0.1.1
 ;; Package-Requires: ((alert "1.1"))
 ;;
+;;; Commentary:
+;;
 ;; Example Installation:
 ;;
 ;;   (require 'projector)
 ;;   (setq projector-projects-root "~/code/")
 ;;
+;;; Code:
 
-(eval-when-compile (require 'cl))
+(require 'cl)
 (autoload 'vc-git-root "vc-git")
 (autoload 'vc-svn-root "vc-svn")
 (autoload 'vc-hg-root "vc-hg")
@@ -30,7 +33,7 @@
 (require 'ido)
 (defvar projector-ido-no-complete-space nil)
 (defadvice ido-complete-space (around ido-insert-space activate)
-  "Allow space on keyboard to insert space when ido-ing shell commands"
+  "Allow space on keyboard to insert space when ido-ing shell commands."
   (if projector-ido-no-complete-space
       (insert " ")
     ad-do-it))
@@ -87,37 +90,37 @@
          (projector-async-shell-command-get-buffer))))))
 
 ;;;###autoload
-(defun projector-run-shell-command-project-root (&optional arg)
+(defun projector-run-shell-command-project-root (&optional notify-on-exit)
   "Execute command from minibuffer at the projector root.
-  By default, it outputs into a dedicated buffer.
-  `C-u' prefix - execute command in the background
-  and send the exit message to `alert'"
+By default, it outputs into a dedicated buffer.
+With the optional argument NOTIFY-ON-EXIT, execute command in the background
+and send the exit message as a notification."
   (interactive "P")
   (let ((dir-string (concat (projector-project-name) " root")))
-    (projector-run-command-buffer nil (consp arg) dir-string)))
+    (projector-run-command-buffer nil (consp notify-on-exit) dir-string)))
 
 ;;;###autoload
 (defun projector-run-shell-command-project-root-background ()
-  "Execute command from minibuffer at the projector root in the background
-  and send the exit message to `alert'"
+  "Execute command from minibuffer at the projector root in the background.
+Sends the exit message as a notification."
   (interactive)
   (let ((dir-string (concat (projector-project-name) " root")))
     (projector-run-command-buffer nil t dir-string)))
 
 ;;;###autoload
-(defun projector-run-shell-command-current-directory (&optional arg)
-  "Execute command from minibuffer in the current directory
-  By default, it outputs into a dedicated buffer.
-  `C-u' prefix - execute command in the background
-  and send the exit message to `alert'"
+(defun projector-run-shell-command-current-directory (&optional notify-on-exit)
+  "Execute command from minibuffer in the current directory.
+By default, it outputs into a dedicated buffer.
+With the optional argument NOTIFY-ON-EXIT, execute command in the background
+and send the exit message as a notification."
   (interactive "P")
   (let ((dir-string "current-directory"))
-    (projector-run-command-buffer t (consp arg) dir-string)))
+    (projector-run-command-buffer t (consp notify-on-exit) dir-string)))
 
 ;;;###autoload
 (defun projector-run-shell-command-current-directory-background ()
-  "Execute command from minibuffer in the current directory
-  and send the exit message to `alert'"
+  "Execute command from minibuffer in the current directory.
+Sends the exit message as a notification."
   (interactive)
   (let ((dir-string "current-directory"))
     (projector-run-command-buffer t t dir-string)))
@@ -175,3 +178,4 @@
      (ido-completing-read "Projector Shell Buffer: " (projector-shell-buffers)))))
 
 (provide 'projector)
+;;; projector.el ends here
