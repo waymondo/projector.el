@@ -1,18 +1,25 @@
-## Emacs Projector
+`projector.el` is a lightweight Emacs library for managing project/repository-aware shell and shell command buffers. A quick overview of features:
 
-`projector.el` is a lightweight Emacs library for managing project/repository-aware shell and shell command buffers. It has no external dependencies but uses `ido-mode` for project, buffer, and shell command completion suggestions.
+* It can spawn both synchronous and asynchronous buffers for shell-commands as well as dedicated `shell-mode` buffers for repositories.
 
-It can spawn both synchronous and asynchronous buffers for shell-commands as well as dedicated `shell-mode` buffers for repositories. Shell command completion candidate suggestions are served from `shell-command-history` in the minibuffer.
+* It uses `ido-mode` for project, buffer, and shell command completion suggestions. Shell command completion candidate suggestions are served from `shell-command-history` in the minibuffer.
 
-For async processes, the exit messaging will be sent to [`terminal-notifier`](https://github.com/alloy/terminal-notifier) or [`growlnotify`](http://growl.info/downloads) if either program is available in your `exec-path`, with fallback to a normal Emacs `(message)` notification.
+* For async processes, it uses [`alert`](https://github.com/jwiegley/alert) for handling the exit message. This makes it easy to hook into notification programs like [`terminal-notifier`](https://github.com/alloy/terminal-notifier) or [`growlnotify`](http://growl.info/downloads).
 
 ## Installation
 
-To install, drop `projector.el` in your load path and add `(require 'projector)` to your initialization and set the variable `projector-projects-root` to the root folder for your local projects/repositories:
+Install it from [MELPA](http://melpa.milkbox.net) or just drop `projector.el` in your load path and add `(require 'projector)` to your initialization.
+
+Set the variable `projector-projects-root` to the root folder for your local projects/repositories:
+
+Optionally, set `alert-default-style` to [one of these](https://github.com/jwiegley/alert/blob/master/alert.el#L123-L128).
+
+example setup:
 
 ```
 (require 'projector)  
 (setq projector-projects-root "~/code/")
+(setq alert-default-style 'notifier)
 ```
 
 ## Usage

@@ -4,8 +4,8 @@
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
-;; Version: 0.1.0
-;; Package-Requires:
+;; Version: 0.1.1
+;; Package-Requires: ((alert "1.1"))
 ;;
 ;; Example Installation:
 ;;
@@ -60,28 +60,10 @@
     (shell (projector-shell-buffer-name))
     (get-buffer (projector-shell-buffer-name))))
 
-(defun projector-notify (title message)
-  "Send shell command exit notification to `terminal-notifier', `growlnotify', or Emacs (message)"
-  (if (executable-find "terminal-notifier")
-      (projector-notify-terminal-notifier title message)
-    (if (executable-find "growlnotify")
-        (projector-notify-growl title message)
-      (message title))))
-
-(defun projector-notify-growl (title message)
-  (start-process "projector-notify" " projector-notify" "growlnotify" title "-a" "Emacs")
-  (process-send-string " projector-notify" message)
-  (process-send-eof " projector-notify"))
-
-(defun projector-notify-terminal-notifier (title message)
-  (start-process "projector-notify" " projector-notify" "terminal-notifier"
-                 "-message" message "-title" title "-activate" "org.gnu.Emacs")
-  (process-send-eof " projector-notify"))
-
 (defun projector-output-message-kill-buffer-sentinel (process msg)
   (when (memq (process-status process) '(exit signal))
-    (projector-notify (projector-shell-command-output-title process msg)
-                      (with-current-buffer (get-buffer (process-buffer process)) (buffer-string)))
+    (alert (with-current-buffer (get-buffer (process-buffer process)) (buffer-string))
+           :title (projector-shell-command-output-title process msg))
     (kill-buffer (process-buffer process))))
 
 (defun projector-async-shell-command-get-buffer ()
@@ -109,7 +91,7 @@
   "Execute command from minibuffer at the projector root.
   By default, it outputs into a dedicated buffer.
   `C-u' prefix - execute command in the background
-  and send the exit message to `terminal-notifier', `growlnotify', or Emacs (message)."
+  and send the exit message to `alert'"
   (interactive "P")
   (let ((dir-string (concat (projector-project-name) " root")))
     (projector-run-command-buffer nil (consp arg) dir-string)))
@@ -117,7 +99,7 @@
 ;;;###autoload
 (defun projector-run-shell-command-project-root-background ()
   "Execute command from minibuffer at the projector root in the background
-  and send the exit message to `terminal-notifier', `growlnotify', or Emacs (message)."
+  and send the exit message to `alert'"
   (interactive)
   (let ((dir-string (concat (projector-project-name) " root")))
     (projector-run-command-buffer nil t dir-string)))
@@ -127,7 +109,7 @@
   "Execute command from minibuffer in the current directory
   By default, it outputs into a dedicated buffer.
   `C-u' prefix - execute command in the background
-  and send the exit message to `terminal-notifier', `growlnotify', or Emacs (message)."
+  and send the exit message to `alert'"
   (interactive "P")
   (let ((dir-string "current-directory"))
     (projector-run-command-buffer t (consp arg) dir-string)))
@@ -135,7 +117,7 @@
 ;;;###autoload
 (defun projector-run-shell-command-current-directory-background ()
   "Execute command from minibuffer in the current directory
-  and send the exit message to `terminal-notifier', `growlnotify', or Emacs (message)."
+  and send the exit message to `alert'"
   (interactive)
   (let ((dir-string "current-directory"))
     (projector-run-command-buffer t t dir-string)))
