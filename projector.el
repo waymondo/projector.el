@@ -17,6 +17,8 @@
 ;;; Code:
 
 (require 'cl)
+(require 'ido)
+(require 'alert)
 (autoload 'vc-git-root "vc-git")
 (autoload 'vc-svn-root "vc-svn")
 (autoload 'vc-hg-root "vc-hg")
@@ -30,7 +32,6 @@
 (defvar projector-buffer-prefix "projector: ")
 (defalias 'projector-command-history 'shell-command-history)
 
-(require 'ido)
 (defvar projector-ido-no-complete-space nil)
 (defadvice ido-complete-space (around ido-insert-space activate)
   "Allow space on keyboard to insert space when ido-ing shell commands."
