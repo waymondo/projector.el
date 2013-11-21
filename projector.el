@@ -4,7 +4,7 @@
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Package-Requires: ((alert "1.1"))
 ;;
 ;;; Commentary:
@@ -13,12 +13,14 @@
 ;;
 ;;   (require 'projector)
 ;;   (setq projector-projects-root "~/code/")
+;;   (setq alert-default-style 'notifier)
 ;;
 ;;; Code:
 
 (require 'cl)
 (require 'ido)
 (require 'alert)
+
 (autoload 'vc-git-root "vc-git")
 (autoload 'vc-svn-root "vc-svn")
 (autoload 'vc-hg-root "vc-hg")
@@ -28,8 +30,16 @@
   :type 'string
   :group 'projector)
 
-;; internal settings
-(defvar projector-buffer-prefix "projector: ")
+(defcustom projector-always-background-regex '()
+  "A list of regex patterns for shell commands to always run in the background."
+  :type 'list
+  :group 'projector)
+
+(defcustom projector-buffer-prefix "projector: "
+  "Prefix for all projector-created buffers"
+  :type 'string
+  :group 'projector)
+
 (defalias 'projector-command-history 'shell-command-history)
 
 (defvar projector-ido-no-complete-space nil)
@@ -58,6 +68,9 @@
 (defun projector-shell-command-output-title (process msg)
   (concat (process-name process) " - " msg))
 
+(defun projector-string-match-pattern-in-list (str lst)
+  (consp (memq t (mapcar (lambda (s) (numberp (string-match s str))) lst))))
+
 (defun projector-make-shell ()
   (with-temp-buffer
     (cd (projector-find-root))
@@ -81,7 +94,7 @@
                                    (delete-duplicates projector-command-history :test #'equal) nil nil nil
                                    'projector-command-history
                                    (car projector-command-history))))
-    (if notify-on-exit
+    (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
         (with-temp-buffer
           (unless in-current-directory (cd (projector-find-root)))
           (set-process-sentinel (start-process-shell-command cmd cmd cmd) #'projector-output-message-kill-buffer-sentinel))
