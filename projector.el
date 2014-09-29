@@ -1,6 +1,6 @@
 ;;; projector.el --- Lightweight library for managing project/repository-aware shell and command buffers
 ;;
-;; Copyright 2013 Justin Talbott
+;; Copyright 2013-2014 Justin Talbott
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
@@ -13,6 +13,7 @@
 ;;
 ;;   (require 'projector)
 ;;   (setq alert-default-style 'notifier) ; for background alerts
+;;   (setq projector-always-background-regex '("^mysql.server\\.*" "^powder\\.*"))
 ;;
 ;;; Code:
 
@@ -38,14 +39,11 @@
       (insert " ")
     ad-do-it))
 
-(defun projector-project-name ()
-  (concat (replace-regexp-in-string "^.*/\\(.*\\)/" "\\1" (projectile-project-root)) ""))
-
 (defun projector-shell-buffer-name ()
-  (concat "*" projector-buffer-prefix (projector-project-name) "*"))
+  (concat "*" projector-buffer-prefix (projectile-project-name) "*"))
 
 (defun projector-shell-command-buffer-name (cmd)
-  (concat "*" projector-buffer-prefix (projector-project-name) " " cmd "*"))
+  (concat "*" projector-buffer-prefix (projectile-project-name) " " cmd "*"))
 
 (defun projector-shell-command-output-title (process msg)
   (concat (process-name process) " - " msg))
@@ -92,7 +90,7 @@ By default, it outputs into a dedicated buffer.
 With the optional argument NOTIFY-ON-EXIT, execute command in the background
 and send the exit message as a notification."
   (interactive "P")
-  (let ((dir-string (concat (projector-project-name) " root")))
+  (let ((dir-string (concat (projectile-project-name) " root")))
     (projector-run-command-buffer nil (consp notify-on-exit) dir-string)))
 
 ;;;###autoload
@@ -100,7 +98,7 @@ and send the exit message as a notification."
   "Execute command from minibuffer at the projector root in the background.
 Sends the exit message as a notification."
   (interactive)
-  (let ((dir-string (concat (projector-project-name) " root")))
+  (let ((dir-string (concat (projectile-project-name) " root")))
     (projector-run-command-buffer nil t dir-string)))
 
 ;;;###autoload
@@ -152,9 +150,9 @@ Sends the exit message as a notification."
 (defun projector-open-project-shell ()
   "Use `completing-read' to find or create a project shell for a repository."
   (interactive)
-  (let ((project-name (completing-read "Open projector shell: " projectile-known-projects)))
+  (let ((project-path (completing-read "Open projector shell: " projectile-known-projects)))
     (with-temp-buffer
-      (cd project-name)
+      (cd project-path)
       (shell (projector-shell-buffer-name)))))
 
 ;;;###autoload
