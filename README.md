@@ -1,4 +1,4 @@
-`projector.el` is a lightweight Emacs library for managing project/repository-aware shell and shell command buffers. A quick overview of features:
+`projector` is a lightweight Emacs library for managing project-aware shell and shell command buffers. It leverages the great [`projectile`](https://github.com/bbatsov/projectile) project interaction library. A quick overview of features:
 
 * It can spawn both synchronous and asynchronous buffers for shell-commands as well as dedicated `shell-mode` buffers for repositories.
 
@@ -24,21 +24,29 @@ Example setup:
 
 ## Available Commands
 
-* `(projector-run-shell-command-project-root)` - Run the named shell command from the current repository root in a dedicated buffer. With the `C-u` prefix, run the process in the background and output on exit to `alert`.
+###### `(projector-run-shell-command-project-root)`  
+Run the named shell command from the current repository root in a dedicated buffer. With the `C-u` prefix, run the process in the background and output on exit to `alert`.
 
-* `(projector-run-shell-command-project-root-background)` - Same as running `(projector-run-shell-command-project-root)` with the `C-u` prefix.
+###### `(projector-run-shell-command-project-root-background)`
+Same as running `(projector-run-shell-command-project-root)` with the `C-u` prefix.
 
-* `(projector-run-shell-command-current-directory)` - Run the named shell command from the current directory in a dedicated buffer. With the `C-u` prefix, run the process in the background and output on exit to `alert`.
+###### `(projector-run-shell-command-current-directory)`
+Run the named shell command from the current directory in a dedicated buffer. With the `C-u` prefix, run the process in the background and output on exit to `alert`.
 
-* `(projector-run-shell-command-current-directory-background)` - Same as running `(projector-run-shell-command-current-directory)` with the `C-u` prefix.
+###### `(projector-run-shell-command-current-directory-background)`
+Same as running `(projector-run-shell-command-current-directory)` with the `C-u` prefix.
 
-* `(projector-switch-to-or-create-project-shell)` - Find or create a dedicated `shell-mode` buffer for the current repository.
+###### `(projector-switch-to-or-create-project-shell)`
+Find or create a dedicated `shell-mode` buffer for the current repository.
 
-* `(projector-open-project-shell)` - Find or create a dedicated `shell-mode` buffer for a project/repository in your `projector-projects-root`.
+###### `(projector-open-project-shell)`
+Find or create a dedicated `shell-mode` buffer for a project/repository in your `projector-projects-root`.
 
-* `(projector-switch-to-shell-buffer)` - Switch to any shell buffer created by `projector`.
+###### `(projector-switch-to-shell-buffer)`
+Switch to any shell buffer created by `projector`.
 
-* `(projector-switch-to-shell-buffer-in-project)` - Switch to any shell buffer created by `projector` in the current project/repository.
+###### `(projector-switch-to-shell-buffer-in-project)`
+Switch to any shell buffer created by `projector` in the current project/repository.
 
 I will leave the key-binding of these up to you, or you can just call them with `M-x` if you'd prefer.
 
