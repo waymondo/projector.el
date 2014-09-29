@@ -4,16 +4,15 @@
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
-;; Version: 0.1.2
-;; Package-Requires: ((alert "1.1"))
+;; Version: 0.2.0
+;; Package-Requires: ((alert "1.1") (projectile "0.11.0"))
 ;;
 ;;; Commentary:
 ;;
-;; Example Installation:
+;;; Installation:
 ;;
 ;;   (require 'projector)
-;;   (setq projector-projects-root "~/code/")
-;;   (setq alert-default-style 'notifier)
+;;   (setq alert-default-style 'notifier) ; for background alerts
 ;;
 ;;; Code:
 
@@ -21,24 +20,13 @@
 (require 'ido)
 (require 'alert)
 
-(autoload 'vc-git-root "vc-git")
-(autoload 'vc-svn-root "vc-svn")
-(autoload 'vc-hg-root "vc-hg")
-
-(defcustom projector-projects-root nil
-  "The root folder that your code repositories reside in."
-  :type 'string
-  :group 'projector)
-
 (defcustom projector-always-background-regex '()
   "A list of regex patterns for shell commands to always run in the background."
   :type 'list
   :group 'projector)
 
-(defcustom projector-buffer-prefix "projector: "
-  "Prefix for all projector-created buffers"
-  :type 'string
-  :group 'projector)
+(defvar projector-buffer-prefix "projector: "
+  "Prefix for all projector-created buffers")
 
 (defalias 'projector-command-history 'shell-command-history)
 
@@ -49,15 +37,8 @@
       (insert " ")
     ad-do-it))
 
-(defun projector-find-root ()
-  "Guess the projector root of the given FILE-PATH."
-  (or (vc-git-root default-directory)
-      (vc-svn-root default-directory)
-      (vc-hg-root default-directory)
-      default-directory))
-
 (defun projector-project-name ()
-  (concat (replace-regexp-in-string "^.*/\\(.*\\)/" "\\1" (projector-find-root)) ""))
+  (concat (replace-regexp-in-string "^.*/\\(.*\\)/" "\\1" (projectile-project-root)) ""))
 
 (defun projector-shell-buffer-name ()
   (concat "*" projector-buffer-prefix (projector-project-name) "*"))
@@ -73,7 +54,7 @@
 
 (defun projector-make-shell ()
   (with-temp-buffer
-    (cd (projector-find-root))
+    (cd (projectile-project-root))
     (shell (projector-shell-buffer-name))
     (get-buffer (projector-shell-buffer-name))))
 
@@ -96,11 +77,11 @@
                                    (car projector-command-history))))
     (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
         (with-temp-buffer
-          (unless in-current-directory (cd (projector-find-root)))
+          (unless in-current-directory (cd (projectile-project-root)))
           (set-process-sentinel (start-process-shell-command cmd cmd cmd) #'projector-output-message-kill-buffer-sentinel))
       (switch-to-buffer
        (save-window-excursion
-         (unless in-current-directory (cd (projector-find-root)))
+         (unless in-current-directory (cd (projectile-project-root)))
          (projector-async-shell-command-get-buffer))))))
 
 ;;;###autoload
@@ -170,9 +151,9 @@ Sends the exit message as a notification."
 (defun projector-open-project-shell ()
   "Use `ido-completing-read' to find or create a project shell for a repository."
   (interactive)
-  (let ((project-name (ido-completing-read "Open projector shell: " (directory-files projector-projects-root nil "^[^.]"))))
+  (let ((project-name (completing-read "Open projector shell: " projectile-known-projects)))
     (with-temp-buffer
-      (cd (concat projector-projects-root project-name))
+      (cd project-name)
       (shell (projector-shell-buffer-name)))))
 
 ;;;###autoload

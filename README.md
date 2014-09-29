@@ -10,8 +10,6 @@
 
 Install it from [MELPA](http://melpa.milkbox.net) or just drop `projector.el` in your load path and add `(require 'projector)` to your initialization.
 
-Set the variable `projector-projects-root` to the root folder for your local projects/repositories:
-
 Optionally, set `alert-default-style` to [one of these](https://github.com/jwiegley/alert/blob/master/alert.el#L123-L128).
 
 You can also set `projector-always-background-regex` to a list of regex patterns that should always run in the background with `alert`.
@@ -20,7 +18,6 @@ Example setup:
 
 ```
 (require 'projector)  
-(setq projector-projects-root "~/code/")
 (setq alert-default-style 'notifier)
 (setq projector-always-background-regex '("^mysql.server\\.*" "^powder\\.*"))
 ```
