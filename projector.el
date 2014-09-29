@@ -17,7 +17,6 @@
 ;;; Code:
 
 (require 'cl)
-(require 'ido)
 (require 'alert)
 
 (defcustom projector-always-background-regex '()
@@ -26,13 +25,15 @@
   :group 'projector)
 
 (defvar projector-buffer-prefix "projector: "
-  "Prefix for all projector-created buffers")
+  "Prefix for all projector-created buffers.")
 
 (defalias 'projector-command-history 'shell-command-history)
 
-(defvar projector-ido-no-complete-space nil)
+(declare-function ido-complete-space "ido")
+(defvar projector-ido-no-complete-space nil
+  "Advice flag to allow space to insert actual space with `ido' completion.")
 (defadvice ido-complete-space (around ido-insert-space activate)
-  "Allow space on keyboard to insert space when ido-ing shell commands."
+  "Allow space on keyboard to insert space when `ido'-ing shell commands."
   (if projector-ido-no-complete-space
       (insert " ")
     ad-do-it))
@@ -71,10 +72,10 @@
 
 (defun projector-run-command-buffer (in-current-directory notify-on-exit dir-string)
   (let* ((projector-ido-no-complete-space t)
-         (cmd (ido-completing-read (concat "Shell command (" dir-string "): ")
-                                   (delete-duplicates projector-command-history :test #'equal) nil nil nil
-                                   'projector-command-history
-                                   (car projector-command-history))))
+         (cmd (completing-read (concat "Shell command (" dir-string "): ")
+                               (delete-duplicates projector-command-history :test #'equal) nil nil nil
+                               'projector-command-history
+                               (car projector-command-history))))
     (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
         (with-temp-buffer
           (unless in-current-directory (cd (projectile-project-root)))
@@ -149,7 +150,7 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-open-project-shell ()
-  "Use `ido-completing-read' to find or create a project shell for a repository."
+  "Use `completing-read' to find or create a project shell for a repository."
   (interactive)
   (let ((project-name (completing-read "Open projector shell: " projectile-known-projects)))
     (with-temp-buffer
@@ -158,19 +159,19 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-switch-to-shell-buffer ()
-  "Use `ido-completing-read' to switch to an open projector shell buffer."
+  "Use `completing-read' to switch to an open projector shell buffer."
   (interactive)
   (let ((string-to-match (concat "*" projector-buffer-prefix)))
     (switch-to-buffer
-     (ido-completing-read "Projector Shell Buffer: " (projector-shell-buffers)))))
+     (completing-read "Projector Shell Buffer: " (projector-shell-buffers)))))
 
 ;;;###autoload
 (defun projector-switch-to-shell-buffer-in-project ()
-  "Use `ido-completing-read' to switch to an open projector shell buffer in the current repository."
+  "Use `completing-read' to switch to an open projector shell buffer in the current repository."
   (interactive)
   (let ((string-to-match (substring (projector-shell-buffer-name) 0 -1)))
     (switch-to-buffer
-     (ido-completing-read "Projector Shell Buffer: " (projector-shell-buffers)))))
+     (completing-read "Projector Shell Buffer: " (projector-shell-buffers)))))
 
 (provide 'projector)
 ;;; projector.el ends here
