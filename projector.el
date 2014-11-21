@@ -144,7 +144,8 @@ Sends the exit message as a notification."
   (interactive)
   (switch-to-buffer
    (or (get-buffer (projector-shell-buffer-name))
-       (save-window-excursion (projector-make-shell)))))
+       (save-window-excursion (projector-make-shell))))
+  (end-of-buffer))
 
 ;;;###autoload
 (defun projector-open-project-shell ()
