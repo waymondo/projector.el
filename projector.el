@@ -4,7 +4,7 @@
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
-;; Version: 0.2.0
+;; Version: 0.2.1
 ;; Package-Requires: ((alert "1.1") (projectile "0.11.0"))
 ;;
 ;;; Commentary:
@@ -23,6 +23,12 @@
 (defcustom projector-always-background-regex '()
   "A list of regex patterns for shell commands to always run in the background."
   :type 'list
+  :group 'projector)
+
+(defcustom projector-command-modes-alist '()
+  "An alist of command patterns to run in specific modes.
+The alist should follow the format of (COMMAND-REGEX . MODE)."
+  :type 'alist
   :group 'projector)
 
 (defvar projector-buffer-prefix "projector: "
@@ -52,6 +58,9 @@
 
 (defun projector-string-match-pattern-in-list (str lst)
   (consp (memq t (mapcar (lambda (s) (numberp (string-match s str))) lst))))
+
+(defun projector-mode-for-command (cmd)
+  (assoc-default cmd projector-command-modes-alist (lambda (x y) (string-match x y))))
 
 (defun projector-make-shell ()
   (with-temp-buffer
@@ -83,7 +92,10 @@
       (switch-to-buffer
        (save-window-excursion
          (unless in-current-directory (cd (projectile-project-root)))
-         (projector-async-shell-command-get-buffer))))))
+         (projector-async-shell-command-get-buffer)))
+      (let ((command-buffer-mode (projector-mode-for-command cmd)))
+        (when command-buffer-mode
+          (funcall command-buffer-mode))))))
 
 ;;;###autoload
 (defun projector-run-shell-command-project-root (&optional notify-on-exit)

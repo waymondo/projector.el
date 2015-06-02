@@ -6,13 +6,11 @@
 
 * For async processes, it uses [`alert`](https://github.com/jwiegley/alert) for handling the exit message. This makes it easy to hook into notification programs like [`terminal-notifier`](https://github.com/alloy/terminal-notifier) or [`growlnotify`](http://growl.info/downloads).
 
-## Installation and Configuration
+## Installation
 
 Install it from [MELPA](http://melpa.milkbox.net) or just drop `projector.el` in your load path and add `(require 'projector)` to your initialization.
 
 Optionally, set `alert-default-style` to [one of these](https://github.com/jwiegley/alert/blob/master/alert.el#L123-L128).
-
-You can also set `projector-always-background-regex` to a list of regex patterns that should always run in the background with `alert`.
 
 Example setup:
 
@@ -20,7 +18,16 @@ Example setup:
 (require 'projector)  
 (setq alert-default-style 'notifier)
 (setq projector-always-background-regex '("^mysql.server\\.*" "^powder\\.*"))
+(setq projector-command-modes-alist '(("^heroku run\\.*" . inf-ruby-mode)))
 ```
+
+## Available Options
+
+###### `projector-always-background-regex`
+You can set this to a list of regex patterns for commands that should always run in the background and will `alert` on completion.
+
+###### `projector-command-modes-alist`
+An alist of command patterns to run in specific modes. The alist should follow the format of `(COMMAND-REGEX . MODE)`.
 
 ## Available Commands
 
@@ -49,10 +56,3 @@ Switch to any shell buffer created by `projector`.
 Switch to any shell buffer created by `projector` in the current project/repository.
 
 I will leave the key-binding of these up to you, or you can just call them with `M-x` if you'd prefer.
-
-
-
-
-
-
-
