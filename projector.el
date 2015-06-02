@@ -17,7 +17,7 @@
 ;;
 ;;; Code:
 
-(require 'cl)
+(eval-when-compile (require 'cl))
 (require 'alert)
 
 (defcustom projector-always-background-regex '()
@@ -31,8 +31,10 @@
 (defalias 'projector-command-history 'shell-command-history)
 
 (declare-function ido-complete-space "ido")
+
 (defvar projector-ido-no-complete-space nil
   "Advice flag to allow space to insert actual space with `ido' completion.")
+
 (defadvice ido-complete-space (around ido-insert-space activate)
   "Allow space on keyboard to insert space when `ido'-ing shell commands."
   (if projector-ido-no-complete-space
