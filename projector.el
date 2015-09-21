@@ -79,23 +79,39 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
     (async-shell-command cmd command-buffer-name)
     (get-buffer command-buffer-name)))
 
-(defun projector-run-command-buffer (in-current-directory notify-on-exit dir-string)
+(defun projector-run-command-buffer (cmd in-current-directory notify-on-exit)
+  (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
+      (with-temp-buffer
+        (unless in-current-directory (cd (projectile-project-root)))
+        (set-process-sentinel (start-process-shell-command cmd cmd cmd) #'projector-output-message-kill-buffer-sentinel))
+    (switch-to-buffer
+     (save-window-excursion
+       (unless in-current-directory (cd (projectile-project-root)))
+       (projector-async-shell-command-get-buffer)))
+    (let ((command-buffer-mode (projector-mode-for-command cmd)))
+      (when command-buffer-mode
+        (funcall command-buffer-mode)))))
+
+(defun projector-run-command-buffer-prompt (in-current-directory notify-on-exit dir-string)
   (let* ((projector-ido-no-complete-space t)
          (cmd (completing-read (concat "Shell command (" dir-string "): ")
                                (delete-duplicates projector-command-history :test #'equal) nil nil nil
                                'projector-command-history
                                (car projector-command-history))))
-    (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
-        (with-temp-buffer
-          (unless in-current-directory (cd (projectile-project-root)))
-          (set-process-sentinel (start-process-shell-command cmd cmd cmd) #'projector-output-message-kill-buffer-sentinel))
-      (switch-to-buffer
-       (save-window-excursion
-         (unless in-current-directory (cd (projectile-project-root)))
-         (projector-async-shell-command-get-buffer)))
-      (let ((command-buffer-mode (projector-mode-for-command cmd)))
-        (when command-buffer-mode
-          (funcall command-buffer-mode))))))
+    (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
+
+;;;###autoload
+(defun projector-rerun-buffer-process ()
+  "Kill then re-run the current shell command from a shell command buffer."
+  (interactive)
+  (let* ((buff (current-buffer))
+         (process (get-buffer-process buff)))
+    (if (not process)
+        (message "No active buffer process")
+      (let ((cmd (process-command process)))
+        (kill-process nil t)
+        (kill-buffer buff)
+        (projector-run-command-buffer (car (last cmd)) t nil)))))
 
 ;;;###autoload
 (defun projector-run-shell-command-project-root (&optional notify-on-exit)
@@ -105,7 +121,7 @@ With the optional argument NOTIFY-ON-EXIT, execute command in the background
 and send the exit message as a notification."
   (interactive "P")
   (let ((dir-string (concat (projectile-project-name) " root")))
-    (projector-run-command-buffer nil (consp notify-on-exit) dir-string)))
+    (projector-run-command-buffer-prompt nil (consp notify-on-exit) dir-string)))
 
 ;;;###autoload
 (defun projector-run-shell-command-project-root-background ()
@@ -113,7 +129,7 @@ and send the exit message as a notification."
 Sends the exit message as a notification."
   (interactive)
   (let ((dir-string (concat (projectile-project-name) " root")))
-    (projector-run-command-buffer nil t dir-string)))
+    (projector-run-command-buffer-prompt nil t dir-string)))
 
 ;;;###autoload
 (defun projector-run-shell-command-current-directory (&optional notify-on-exit)
@@ -123,7 +139,7 @@ With the optional argument NOTIFY-ON-EXIT, execute command in the background
 and send the exit message as a notification."
   (interactive "P")
   (let ((dir-string "current-directory"))
-    (projector-run-command-buffer t (consp notify-on-exit) dir-string)))
+    (projector-run-command-buffer-prompt t (consp notify-on-exit) dir-string)))
 
 ;;;###autoload
 (defun projector-run-shell-command-current-directory-background ()
@@ -131,7 +147,7 @@ and send the exit message as a notification."
 Sends the exit message as a notification."
   (interactive)
   (let ((dir-string "current-directory"))
-    (projector-run-command-buffer t t dir-string)))
+    (projector-run-command-buffer-prompt t t dir-string)))
 
 (defun projector-is-shell-buffer-name (buf-name)
   (when (and (>= (length buf-name) (length string-to-match))
