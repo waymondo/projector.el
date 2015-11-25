@@ -34,6 +34,9 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
 (defvar projector-buffer-prefix "projector: "
   "Prefix for all projector-created buffers.")
 
+(defvar projector-process-cache-alist '()
+  "A cached alist of command buffers and processes.")
+
 (defalias 'projector-command-history 'shell-command-history)
 
 (declare-function ido-complete-space "ido")
@@ -88,7 +91,10 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
      (save-window-excursion
        (unless in-current-directory (cd (projectile-project-root)))
        (projector-async-shell-command-get-buffer)))
-    (let ((command-buffer-mode (projector-mode-for-command cmd)))
+    (let* ((command-buffer-mode (projector-mode-for-command cmd))
+           (command-buffer-name (buffer-name (current-buffer)))
+           (command-buffer-process (get-buffer-process (current-buffer))))
+      (add-to-list 'projector-process-cache-alist `(,command-buffer-name . ,command-buffer-process))
       (when command-buffer-mode
         (funcall command-buffer-mode)))))
 
@@ -104,14 +110,19 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
 (defun projector-rerun-buffer-process ()
   "Kill then re-run the current shell command from a shell command buffer."
   (interactive)
-  (let* ((buff (current-buffer))
-         (process (get-buffer-process buff)))
+  (let* ((buff (buffer-name (current-buffer)))
+         (active-process (get-buffer-process buff))
+         (process-directory default-directory)
+         (process (assoc-default buff projector-process-cache-alist)))
     (if (not process)
-        (message "No active buffer process")
-      (let ((cmd (process-command process)))
-        (kill-process nil t)
+        (message "No buffer process found")
+      (let ((cmd (process-command process))
+            (kill-buffer-query-functions '()))
+        (when active-process
+          (kill-process nil t))
         (kill-buffer buff)
-        (projector-run-command-buffer (car (last cmd)) t nil)))))
+        (let ((default-directory process-directory))
+          (projector-run-command-buffer (car (last cmd)) t nil))))))
 
 ;;;###autoload
 (defun projector-run-shell-command-project-root (&optional notify-on-exit)
