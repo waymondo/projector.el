@@ -31,6 +31,12 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
   :type 'alist
   :group 'projector)
 
+(defcustom projector-default-command nil
+  "The default command to run with `projector-run-default-shell-command'.
+This is usually most helpful to set on a directoy local level via `.dir-locals.el'.")
+
+(put 'projector-default-command 'safe-local-variable #'stringp)
+
 (defvar projector-buffer-prefix "projector: "
   "Prefix for all projector-created buffers.")
 
@@ -125,8 +131,19 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
           (projector-run-command-buffer (car (last cmd)) t nil))))))
 
 ;;;###autoload
+(defun projector-run-default-shell-command (&optional notify-on-exit)
+  "Execute `projector-default-command' at the project root.
+By default, it outputs into a dedicated buffer.
+With the optional argument NOTIFY-ON-EXIT, execute command in the background
+and send the exit message as a notification."
+  (interactive)
+  (if (not projector-default-command)
+      (message "`projector-default-command' is unset")
+    (projector-run-command-buffer projector-default-command nil notify-on-exit)))
+
+;;;###autoload
 (defun projector-run-shell-command-project-root (&optional notify-on-exit)
-  "Execute command from minibuffer at the projector root.
+  "Execute command from minibuffer at the project root.
 By default, it outputs into a dedicated buffer.
 With the optional argument NOTIFY-ON-EXIT, execute command in the background
 and send the exit message as a notification."
@@ -136,7 +153,7 @@ and send the exit message as a notification."
 
 ;;;###autoload
 (defun projector-run-shell-command-project-root-background ()
-  "Execute command from minibuffer at the projector root in the background.
+  "Execute command from minibuffer at the project root in the background.
 Sends the exit message as a notification."
   (interactive)
   (let ((dir-string (concat (projectile-project-name) " root")))
