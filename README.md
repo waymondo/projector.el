@@ -8,7 +8,7 @@
 
 ## Installation
 
-Install it from [MELPA](http://melpa.milkbox.net) or just drop `projector.el` in your load path and add `(require 'projector)` to your initialization.
+Install it from [MELPA](https://melpa.org/) or just drop `projector.el` in your load path and add `(require 'projector)` to your initialization.
 
 Optionally, set `alert-default-style` to [one of these](https://github.com/jwiegley/alert/blob/master/alert.el#L123-L128).
 
