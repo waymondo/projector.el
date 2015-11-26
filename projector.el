@@ -95,16 +95,19 @@ This is usually most helpful to set on a directoy local level via a
       (with-temp-buffer
         (unless in-current-directory (cd (projectile-project-root)))
         (set-process-sentinel (start-process-shell-command cmd cmd cmd) #'projector-output-message-kill-buffer-sentinel))
-    (switch-to-buffer
-     (save-window-excursion
-       (unless in-current-directory (cd (projectile-project-root)))
-       (projector-async-shell-command-get-buffer)))
-    (let* ((command-buffer-mode (projector-mode-for-command cmd))
-           (command-buffer-name (buffer-name (current-buffer)))
-           (command-buffer-process (get-buffer-process (current-buffer))))
-      (add-to-list 'projector-process-cache-alist `(,command-buffer-name . ,command-buffer-process))
-      (when command-buffer-mode
-        (funcall command-buffer-mode)))))
+    (let ((command-buffer (get-buffer (projector-shell-command-buffer-name cmd))))
+      (if command-buffer
+          (switch-to-buffer command-buffer)
+        (switch-to-buffer
+         (save-window-excursion
+           (unless in-current-directory (cd (projectile-project-root)))
+           (projector-async-shell-command-get-buffer)))
+        (let* ((command-buffer-mode (projector-mode-for-command cmd))
+               (command-buffer-name (buffer-name (current-buffer)))
+               (command-buffer-process (get-buffer-process (current-buffer))))
+          (add-to-list 'projector-process-cache-alist `(,command-buffer-name . ,command-buffer-process))
+          (when command-buffer-mode
+            (funcall command-buffer-mode)))))))
 
 (defun projector-run-command-buffer-prompt (in-current-directory notify-on-exit dir-string)
   (let* ((projector-ido-no-complete-space t)
