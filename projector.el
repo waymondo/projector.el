@@ -5,7 +5,7 @@
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
 ;; Version: 0.2.1
-;; Package-Requires: ((alert "1.1") (projectile "0.11.0"))
+;; Package-Requires: ((alert "1.1") (projectile "0.11.0") (cl-lib "0.5"))
 ;;
 ;;; Commentary:
 ;;
@@ -17,7 +17,7 @@
 ;;
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 (require 'alert)
 
 (defcustom projector-always-background-regex '()
@@ -107,7 +107,7 @@ This is usually most helpful to set on a directoy local level via `.dir-locals.e
 (defun projector-run-command-buffer-prompt (in-current-directory notify-on-exit dir-string)
   (let* ((projector-ido-no-complete-space t)
          (cmd (completing-read (concat "Shell command (" dir-string "): ")
-                               (delete-duplicates projector-command-history :test #'equal) nil nil nil
+                               (cl-delete-duplicates projector-command-history :test #'equal) nil nil nil
                                'projector-command-history
                                (car projector-command-history))))
     (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
