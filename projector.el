@@ -1,4 +1,4 @@
-;;; projector.el --- Lightweight library for managing project/repository-aware shell and command buffers
+;;; projector.el --- Lightweight library for managing project-aware shell and command buffers
 ;;
 ;; Copyright 2013-2014 Justin Talbott
 ;;
@@ -33,7 +33,8 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
 
 (defcustom projector-default-command nil
   "The default command to run with `projector-run-default-shell-command'.
-This is usually most helpful to set on a directoy local level via `.dir-locals.el'.")
+This is usually most helpful to set on a directoy local level via a
+`.dir-locals.el' file.")
 
 (put 'projector-default-command 'safe-local-variable #'stringp)
 
@@ -198,7 +199,7 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-switch-to-or-create-project-shell ()
-  "Find or create a dedicated shell for the current repository."
+  "Find or create a dedicated shell for the current project."
   (interactive)
   (switch-to-buffer
    (or (get-buffer (projector-shell-buffer-name))
@@ -207,7 +208,7 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-open-project-shell ()
-  "Use `completing-read' to find or create a project shell for a repository."
+  "Use `completing-read' to find or create a `shell-mode' buffer for a project."
   (interactive)
   (let ((project-path (completing-read "Open projector shell: " projectile-known-projects)))
     (with-temp-buffer
@@ -216,7 +217,7 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-switch-to-shell-buffer ()
-  "Use `completing-read' to switch to an open projector shell buffer."
+  "Use `completing-read' to switch to any shell buffer created by `projector'."
   (interactive)
   (let ((string-to-match (concat "*" projector-buffer-prefix)))
     (switch-to-buffer
@@ -224,7 +225,8 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-switch-to-shell-buffer-in-project ()
-  "Use `completing-read' to switch to an open projector shell buffer in the current repository."
+  "Use `completing-read' to switch to any shell buffer created by
+`projector' in the current project."
   (interactive)
   (let ((string-to-match (substring (projector-shell-buffer-name) 0 -1)))
     (switch-to-buffer
