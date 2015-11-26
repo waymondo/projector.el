@@ -44,7 +44,8 @@ This is usually most helpful to set on a directoy local level via a
 (defvar projector-process-cache-alist '()
   "A cached alist of command buffers and processes.")
 
-(defvaralias 'projector-command-history 'shell-command-history)
+(defvar projector-command-history '()
+  "The minibuffer history of `projector' shell commands run.")
 
 (declare-function ido-complete-space "ido")
 
