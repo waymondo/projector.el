@@ -43,7 +43,7 @@ This is usually most helpful to set on a directoy local level via `.dir-locals.e
 (defvar projector-process-cache-alist '()
   "A cached alist of command buffers and processes.")
 
-(defalias 'projector-command-history 'shell-command-history)
+(defvaralias 'projector-command-history 'shell-command-history)
 
 (declare-function ido-complete-space "ido")
 
