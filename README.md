@@ -95,5 +95,20 @@ Use `completing-read` to switch to any shell buffer created by `projector`.
 Use `completing-read` to switch to any shell buffer created by
 `projector` in the current project.
 
+###### `(projector-switch-project-run-shell-command)`
+
+Switch to another `projectile` project and run a shell command
+from that project's root.
+
+###### `(projector-switch-project-run-shell-command-background)`
+
+Switch to another `projectile` project and run a shell command
+in the background from that project's root.
+
+###### `(projector-switch-project-run-default-shell-command)`
+
+Switch to another `projectile` project and run the default shell
+command from that project's root.
+
 I will leave the key-binding of these up to you, or you can just call
 them with `M-x` if you'd prefer.

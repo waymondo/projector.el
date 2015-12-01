@@ -214,7 +214,7 @@ Sends the exit message as a notification."
 (defun projector-open-project-shell ()
   "Use `completing-read' to find or create a `shell-mode' buffer for a project."
   (interactive)
-  (let ((project-path (completing-read "Open projector shell: " projectile-known-projects)))
+  (let ((project-path (completing-read "Open project shell: " projectile-known-projects)))
     (with-temp-buffer
       (cd project-path)
       (shell (projector-shell-buffer-name)))))
@@ -235,6 +235,33 @@ Sends the exit message as a notification."
   (let ((string-to-match (substring (projector-shell-buffer-name) 0 -1)))
     (switch-to-buffer
      (completing-read "Projector Shell Buffer: " (projector-shell-buffers)))))
+
+;;;###autoload
+(defun projector-switch-project-run-shell-command ()
+  "Switch to another `projectile' project and run a shell command
+from that project's root."
+  (interactive)
+  (let ((project-path (completing-read "Switch to project: " projectile-known-projects)))
+    (projectile-with-default-dir project-path
+      (call-interactively 'projector-run-shell-command-project-root))))
+
+;;;###autoload
+(defun projector-switch-project-run-shell-command-background ()
+  "Switch to another `projectile' project and run a shell command
+in the background from that project's root."
+  (interactive)
+  (let ((project-path (completing-read "Switch to project: " projectile-known-projects)))
+    (projectile-with-default-dir project-path
+      (call-interactively 'projector-run-shell-command-project-root-background))))
+
+;;;###autoload
+(defun projector-switch-project-run-default-shell-command ()
+  "Switch to another `projectile' project and run the default
+shell command from that project's root."
+  (interactive)
+  (let ((project-path (completing-read "Switch to project: " projectile-known-projects)))
+    (projectile-with-default-dir project-path
+      (call-interactively 'projector-run-default-shell-command))))
 
 (provide 'projector)
 ;;; projector.el ends here
