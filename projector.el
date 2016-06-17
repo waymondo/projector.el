@@ -34,7 +34,18 @@ The alist should follow the format of (COMMAND-REGEX . MODE)."
 (defcustom projector-default-command nil
   "The default command to run with `projector-run-default-shell-command'.
 This is usually most helpful to set on a directoy local level via a
-`.dir-locals.el' file.")
+`.dir-locals.el' file."
+  :group 'projector
+  :type 'string)
+
+(defcustom projector-completion-system 'ido
+  "The completion system to be used by Projectile."
+  :group 'projector
+  :type '(radio
+          (const :tag "Ido" ido)
+          (const :tag "Ivy" ivy)
+          (const :tag "Default" default)
+          (function :tag "Custom function")))
 
 (put 'projector-default-command 'safe-local-variable #'stringp)
 
@@ -110,12 +121,26 @@ This is usually most helpful to set on a directoy local level via a
             (funcall command-buffer-mode)))))))
 
 (defun projector-run-command-buffer-prompt (in-current-directory notify-on-exit dir-string)
-  (let* ((projector-ido-no-complete-space t)
-         (cmd (completing-read (concat "Shell command (" dir-string "): ")
-                               (cl-delete-duplicates projector-command-history :test #'equal) nil nil nil
-                               'projector-command-history
-                               (car projector-command-history))))
-    (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
+  (let ((prompt (concat "Shell command (" dir-string "): "))
+        (choices (cl-delete-duplicates projector-command-history :test #'equal))
+        (initial-input (car projector-command-history)))
+    (cond
+     ((eq projector-completion-system 'ido)
+      (let ((cmd
+             (ido-completing-read prompt choices nil nil nil 'projector-command-history initial-input)))
+        (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
+     ((eq projector-completion-system 'default)
+      (let ((cmd
+             (completing-read prompt choices nil nil nil 'projector-command-history initial-input)))
+        (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
+     ((eq projector-completion-system 'ivy)
+      (if (fboundp 'ivy-read)
+          (let ((cmd (ivy-read prompt choices
+                               :caller 'projector-run-command-buffer-prompt)))
+            (projector-run-command-buffer cmd in-current-directory notify-on-exit))
+        (user-error "Please install ivy from \
+https://github.com/abo-abo/swiper")))
+     (t (funcall projector-completion-system prompt choices)))))
 
 ;;;###autoload
 (defun projector-rerun-buffer-process ()
