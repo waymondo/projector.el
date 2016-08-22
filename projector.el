@@ -4,7 +4,7 @@
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
-;; Version: 0.3.0
+;; Version: 0.3.1
 ;; Package-Requires: ((alert "1.1") (projectile "0.11.0") (cl-lib "0.5"))
 ;;
 ;;; Commentary:
@@ -57,6 +57,9 @@ This is usually most helpful to set on a directoy local level via a
 
 (defvar projector-command-history '()
   "The minibuffer history of `projector' shell commands run.")
+
+(defvar projector-ivy-command-history nil
+  "Store command history for ivy backend completion.")
 
 (declare-function ido-complete-space "ido")
 
@@ -135,9 +138,13 @@ This is usually most helpful to set on a directoy local level via a
         (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
      ((eq projector-completion-system 'ivy)
       (if (fboundp 'ivy-read)
-          (let ((cmd (ivy-read prompt choices
-                               :caller 'projector-run-command-buffer-prompt)))
-            (projector-run-command-buffer cmd in-current-directory notify-on-exit))
+          (ivy-read prompt choices
+                    :caller 'projector-run-command-buffer-prompt
+                    :history 'projector-ivy-command-history
+                    :action (lambda (cmd)
+                              (add-to-list 'projector-command-history cmd)
+                              (projector-run-command-buffer cmd in-current-directory notify-on-exit)
+                              ))
         (user-error "Please install ivy from \
 https://github.com/abo-abo/swiper")))
      (t (funcall projector-completion-system prompt choices)))))
