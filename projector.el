@@ -138,13 +138,14 @@ This is usually most helpful to set on a directoy local level via a
         (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
      ((eq projector-completion-system 'ivy)
       (if (fboundp 'ivy-read)
-          (ivy-read prompt choices
+          (let ((project-root (projectile-project-root)))
+            (ivy-read prompt choices
                     :caller 'projector-run-command-buffer-prompt
                     :history 'projector-ivy-command-history
                     :action (lambda (cmd)
+                              (unless in-current-directory (cd project-root))
                               (add-to-list 'projector-command-history cmd)
-                              (projector-run-command-buffer cmd in-current-directory notify-on-exit)
-                              ))
+                              (projector-run-command-buffer cmd in-current-directory notify-on-exit))))
         (user-error "Please install ivy from \
 https://github.com/abo-abo/swiper")))
      (t (funcall projector-completion-system prompt choices)))))
