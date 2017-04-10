@@ -1,6 +1,6 @@
 ;;; projector.el --- Lightweight library for managing project-aware shell and command buffers
 ;;
-;; Copyright 2013-2014 Justin Talbott
+;; Copyright 2013-2017 Justin Talbott
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector
@@ -144,11 +144,19 @@ This is usually most helpful to set on a directoy local level via a
                     :history 'projector-ivy-command-history
                     :action (lambda (cmd)
                               (unless in-current-directory (cd project-root))
-                              (add-to-list 'projector-command-history cmd)
+                              (push cmd projector-command-history)
+                              (setq projector-command-history
+                                    (delq nil (delete-dups projector-command-history)))
                               (projector-run-command-buffer cmd in-current-directory notify-on-exit))))
         (user-error "Please install ivy from \
 https://github.com/abo-abo/swiper")))
      (t (funcall projector-completion-system prompt choices)))))
+
+(ivy-set-actions
+ 'projector-run-command-buffer-prompt
+ '(("D" (lambda (cmd)
+          (delete cmd projector-command-history))
+    "remove from history")))
 
 ;;;###autoload
 (defun projector-rerun-buffer-process ()
