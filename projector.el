@@ -6,6 +6,7 @@
 ;; URL: https://github.com/waymondo/projector
 ;; Version: 0.3.1
 ;; Package-Requires: ((alert "1.1") (projectile "0.11.0") (cl-lib "0.5"))
+;; License: GNU General Public License version 3, or (at your option) any later version
 ;;
 ;;; Commentary:
 ;;
