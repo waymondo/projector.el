@@ -153,11 +153,12 @@ This is usually most helpful to set on a directoy local level via a
 https://github.com/abo-abo/swiper")))
      (t (funcall projector-completion-system prompt choices)))))
 
-(ivy-set-actions
- 'projector-run-command-buffer-prompt
- '(("D" (lambda (cmd)
-          (delete cmd projector-command-history))
-    "remove from history")))
+(with-eval-after-load "ivy"
+  (ivy-set-actions
+   'projector-run-command-buffer-prompt
+   '(("D" (lambda (cmd)
+            (delete cmd projector-command-history))
+      "remove from history"))))
 
 ;;;###autoload
 (defun projector-rerun-buffer-process ()
