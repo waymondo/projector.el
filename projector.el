@@ -140,7 +140,7 @@ This is usually most helpful to set on a directoy local level via a
      ((eq projector-completion-system 'ivy)
       (if (fboundp 'ivy-read)
           (let ((project-root (projectile-project-root)))
-            (ivy-read prompt projector-ivy-command-history
+            (ivy-read prompt projector-command-history
                       :caller 'projector-run-command-buffer-prompt
                       :history 'projector-ivy-command-history
                       :action (lambda (cmd)
