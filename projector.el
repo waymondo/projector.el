@@ -185,6 +185,7 @@ By default, it outputs into a dedicated buffer.
 With the optional argument NOTIFY-ON-EXIT, execute command in the background
 and send the exit message as a notification."
   (interactive)
+  (hack-dir-local-variables-non-file-buffer)
   (if (not projector-default-command)
       (message "`projector-default-command' is unset")
     (projector-run-command-buffer projector-default-command nil notify-on-exit)))
