@@ -1,9 +1,9 @@
 ;;; projector.el --- Lightweight library for managing project-aware shell and command buffers
 ;;
-;; Copyright 2013-2017 Justin Talbott
+;; Copyright 2013-2019 Justin Talbott
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
-;; URL: https://github.com/waymondo/projector
+;; URL: https://github.com/waymondo/projector.el
 ;; Version: 0.3.1
 ;; Package-Requires: ((alert "1.1") (projectile "0.11.0") (cl-lib "0.5"))
 ;; License: GNU General Public License version 3, or (at your option) any later version
