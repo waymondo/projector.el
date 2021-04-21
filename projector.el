@@ -1,10 +1,10 @@
 ;;; projector.el --- Lightweight library for managing project-aware shell and command buffers
 ;;
-;; Copyright 2013-2019 Justin Talbott
+;; Copyright 2013-2021 Justin Talbott
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector.el
-;; Version: 0.3.1
+;; Version: 0.3.2
 ;; Package-Requires: ((alert "1.1") (projectile "0.11.0") (cl-lib "0.5"))
 ;; License: GNU General Public License version 3, or (at your option) any later version
 ;;
@@ -48,6 +48,12 @@ This is usually most helpful to set on a directoy local level via a
           (const :tag "Default" default)
           (function :tag "Custom function")))
 
+(defcustom projector-use-vterm (featurep 'vterm)
+  "Opt into using `vterm' instead of `shell-mode' for
+buffers. Defaults to true if `vterm' is installed."
+  :group 'projector
+  :type 'boolean)
+
 (put 'projector-default-command 'safe-local-variable #'stringp)
 
 (defvar projector-buffer-prefix "projector: "
@@ -88,11 +94,17 @@ This is usually most helpful to set on a directoy local level via a
 (defun projector-mode-for-command (cmd)
   (assoc-default cmd projector-command-modes-alist (lambda (x y) (string-match x y))))
 
+(defun projector-shell-or-vterm (buf-name)
+  (if projector-use-vterm
+      (vterm buf-name)
+    (shell buf-name)))
+
 (defun projector-make-shell ()
   (with-temp-buffer
     (cd (projectile-project-root))
-    (shell (projector-shell-buffer-name))
-    (get-buffer (projector-shell-buffer-name))))
+    (let ((buf-name (projector-shell-buffer-name)))
+      (projector-shell-or-vterm buf-name)
+      (get-buffer buf-name))))
 
 (defun projector-output-message-kill-buffer-sentinel (process msg)
   (when (memq (process-status process) '(exit signal))
@@ -105,6 +117,20 @@ This is usually most helpful to set on a directoy local level via a
     (async-shell-command cmd command-buffer-name)
     (get-buffer command-buffer-name)))
 
+(defvar-local projector-vterm-buffer-command nil
+  "Cache the last shell command for the current vterm buffer.")
+
+(defun projector-vterm-shell-command-get-buffer ()
+  (let* ((command-buffer-name (projector-shell-command-buffer-name cmd))
+         (buf (get-buffer-create command-buffer-name)))
+    (with-current-buffer buf
+      (unless (derived-mode-p 'vterm-mode)
+        (vterm-mode)
+        (vterm-send-string cmd)
+        (vterm-send-return)
+        (setq projector-vterm-buffer-command cmd)))
+    buf))
+
 (defun projector-run-command-buffer (cmd in-current-directory notify-on-exit)
   (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
       (with-temp-buffer
@@ -116,12 +142,14 @@ This is usually most helpful to set on a directoy local level via a
         (switch-to-buffer
          (save-window-excursion
            (unless in-current-directory (cd (projectile-project-root)))
-           (projector-async-shell-command-get-buffer)))
+           (if projector-use-vterm
+               (projector-vterm-shell-command-get-buffer)
+             (projector-async-shell-command-get-buffer))))
         (let* ((command-buffer-mode (projector-mode-for-command cmd))
                (command-buffer-name (buffer-name (current-buffer)))
                (command-buffer-process (get-buffer-process (current-buffer))))
           (add-to-list 'projector-process-cache-alist `(,command-buffer-name . ,command-buffer-process))
-          (when command-buffer-mode
+          (when (and (not projector-use-vterm) command-buffer-mode)
             (funcall command-buffer-mode)))))))
 
 (defun projector-run-command-buffer-prompt (in-current-directory notify-on-exit dir-string)
@@ -170,7 +198,10 @@ https://github.com/abo-abo/swiper")))
          (process (assoc-default buff projector-process-cache-alist)))
     (if (not process)
         (message "No buffer process found")
-      (let ((cmd (process-command process))
+      (let ((cmd
+             (if projector-use-vterm
+                 (list projector-vterm-buffer-command)
+               (process-command process)))
             (kill-buffer-query-functions '()))
         (when active-process
           (kill-process nil t))
@@ -238,10 +269,8 @@ Sends the exit message as a notification."
      (mapcar (lambda (buf)
                (when (buffer-live-p buf)
                  (with-current-buffer buf
-                   (and (eq major-mode 'shell-mode)
-                        (buffer-name buf)
-                        (projector-is-shell-buffer-name (buffer-name buf))
-                        ))))
+                   (and (buffer-name buf)
+                        (projector-is-shell-buffer-name (buffer-name buf))))))
              (buffer-list)))))
 
 ;;;###autoload
@@ -260,7 +289,7 @@ Sends the exit message as a notification."
   (let ((project-path (completing-read "Open project shell: " projectile-known-projects)))
     (with-temp-buffer
       (cd project-path)
-      (shell (projector-shell-buffer-name)))))
+      (projector-shell-or-vterm (projector-shell-buffer-name)))))
 
 ;;;###autoload
 (defun projector-switch-to-shell-buffer ()
