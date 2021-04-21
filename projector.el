@@ -39,7 +39,7 @@ This is usually most helpful to set on a directoy local level via a
   :group 'projector
   :type 'string)
 
-(defcustom projector-completion-system 'ido
+(defcustom projector-completion-system 'default
   "The completion system to be used by Projectile."
   :group 'projector
   :type '(radio
