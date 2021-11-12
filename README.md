@@ -1,10 +1,8 @@
-`projector` is a lightweight Emacs library for managing project-aware
-`shell` and `shell-command` buffers. It leverages the great
-[`projectile`](https://github.com/bbatsov/projectile) project
-interaction library to make it easy to manage command line tools.
+`projector` is a lightweight Emacs library for managing project-aware `shell` and `shell-command`
+buffers. It leverages either [`projectile`](https://github.com/bbatsov/projectile) or the built-in
+`project.el` package to make it easy to manage command line tools.
 
-For async processes, it uses
-[`alert`](https://github.com/jwiegley/alert) for handling the exit
+For async processes, it uses [`alert`](https://github.com/jwiegley/alert) for handling the exit
 message. This makes it easy to hook into notification programs like
 [`terminal-notifier`](https://github.com/alloy/terminal-notifier) or
 [`growlnotify`](http://growl.info/downloads).
@@ -15,14 +13,18 @@ Recommended install from [MELPA](https://melpa.org) with `M-x package-install pr
 
 Example setup:
 
-``` elisp
-(require 'projector)  
+```elisp
+(require 'projector)
 (setq alert-default-style 'notifier)
 (setq projector-always-background-regex '("^mysql.server\\.*" "^powder\\.*"))
 (setq projector-command-modes-alist '(("^heroku run\\.*" . inf-ruby-mode)))
 ```
 
 ## Available Options
+
+###### `projector-project-package`
+
+The project package to be used by Projector. Defaults to `projectile` if the package is available.
 
 ###### `projector-always-background-regex`
 
@@ -42,7 +44,7 @@ set on a directoy local level via a
 [`.dir-locals.el`](http://www.gnu.org/software/emacs/manual/html_node/elisp/Directory-Local-Variables.html)
 file:
 
-``` elisp
+```elisp
 ((nil . ((projector-default-command . "foreman start"))))
 ```
 
@@ -112,3 +114,9 @@ command from that project's root.
 
 I will leave the key-binding of these up to you, or you can just call
 them with `M-x` if you'd prefer.
+
+### Changelog
+
+Nov 12th 2021 - `0.3.3` - added support for modern Emacs `project.el` via
+`projector-project-package`. As such, `projectile` is now no longer a hard dependency, and needs to
+be installed separately.

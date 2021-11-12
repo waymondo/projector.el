@@ -4,8 +4,8 @@
 ;;
 ;; Author: Justin Talbott <justin@waymondo.com>
 ;; URL: https://github.com/waymondo/projector.el
-;; Version: 0.3.2
-;; Package-Requires: ((alert "1.1") (projectile "0.11.0") (cl-lib "0.5"))
+;; Version: 0.3.3
+;; Package-Requires: ((alert "1.1") (cl-lib "0.5"))
 ;; License: GNU General Public License version 3, or (at your option) any later version
 ;;
 ;;; Commentary:
@@ -20,6 +20,13 @@
 
 (require 'cl-lib)
 (require 'alert)
+
+(defcustom projector-project-package (if (require 'projectile nil t) 'projectile 'project)
+  "The project package to be used by Projector."
+  :group 'projector
+  :type '(radio
+          (const :tag "Projectile" projectile)
+          (const :tag "Project" project)))
 
 (defcustom projector-always-background-regex '()
   "A list of regex patterns for shell commands to always run in the background."
@@ -40,7 +47,7 @@ This is usually most helpful to set on a directoy local level via a
   :type 'string)
 
 (defcustom projector-completion-system 'default
-  "The completion system to be used by Projectile."
+  "The completion system to be used by Projector."
   :group 'projector
   :type '(radio
           (const :tag "Ido" ido)
@@ -79,11 +86,35 @@ buffers. Defaults to true if `vterm' is installed."
       (insert " ")
     ad-do-it))
 
+(defun projector-project-name ()
+  "Get the current project’s name."
+  (cond
+   ((eq projector-project-package 'projectile)
+    (projectile-project-name))
+   ((eq projector-project-package 'project)
+    (file-name-nondirectory (directory-file-name (project-root (project-current)))))))
+
+(defun projector-project-root ()
+  "Get the current project’s root folder."
+  (cond
+   ((eq projector-project-package 'projectile)
+    (projectile-project-root))
+   ((eq projector-project-package 'project)
+    (project-root (project-current)))))
+
+(defun projector-known-projects ()
+  "Get all known project roots."
+  (cond
+   ((eq projector-project-package 'projectile)
+    projectile-known-projects)
+   ((eq projector-project-package 'project)
+    (project-known-project-roots))))
+
 (defun projector-shell-buffer-name ()
-  (concat "*" projector-buffer-prefix (projectile-project-name) "*"))
+  (concat "*" projector-buffer-prefix (projector-project-name) "*"))
 
 (defun projector-shell-command-buffer-name (cmd)
-  (concat "*" projector-buffer-prefix (projectile-project-name) " " cmd "*"))
+  (concat "*" projector-buffer-prefix (projector-project-name) " " cmd "*"))
 
 (defun projector-shell-command-output-title (process msg)
   (concat (process-name process) " - " msg))
@@ -101,7 +132,7 @@ buffers. Defaults to true if `vterm' is installed."
 
 (defun projector-make-shell ()
   (with-temp-buffer
-    (cd (projectile-project-root))
+    (cd (projector-project-root))
     (let ((buf-name (projector-shell-buffer-name)))
       (projector-shell-or-vterm buf-name)
       (get-buffer buf-name))))
@@ -134,14 +165,14 @@ buffers. Defaults to true if `vterm' is installed."
 (defun projector-run-command-buffer (cmd in-current-directory notify-on-exit)
   (if (or notify-on-exit (projector-string-match-pattern-in-list cmd projector-always-background-regex))
       (with-temp-buffer
-        (unless in-current-directory (cd (projectile-project-root)))
+        (unless in-current-directory (cd (projector-project-root)))
         (set-process-sentinel (start-process-shell-command cmd cmd cmd) #'projector-output-message-kill-buffer-sentinel))
     (let ((command-buffer (get-buffer (projector-shell-command-buffer-name cmd))))
       (if command-buffer
           (switch-to-buffer command-buffer)
         (switch-to-buffer
          (save-window-excursion
-           (unless in-current-directory (cd (projectile-project-root)))
+           (unless in-current-directory (cd (projector-project-root)))
            (if projector-use-vterm
                (projector-vterm-shell-command-get-buffer)
              (projector-async-shell-command-get-buffer))))
@@ -167,7 +198,7 @@ buffers. Defaults to true if `vterm' is installed."
         (projector-run-command-buffer cmd in-current-directory notify-on-exit)))
      ((eq projector-completion-system 'ivy)
       (if (fboundp 'ivy-read)
-          (let ((project-root (projectile-project-root)))
+          (let ((project-root (projector-project-root)))
             (ivy-read prompt projector-command-history
                       :caller 'projector-run-command-buffer-prompt
                       :history 'projector-ivy-command-history
@@ -228,7 +259,7 @@ By default, it outputs into a dedicated buffer.
 With the optional argument NOTIFY-ON-EXIT, execute command in the background
 and send the exit message as a notification."
   (interactive "P")
-  (let ((dir-string (concat (projectile-project-name) " root")))
+  (let ((dir-string (concat (projector-project-name) " root")))
     (projector-run-command-buffer-prompt nil (consp notify-on-exit) dir-string)))
 
 ;;;###autoload
@@ -236,7 +267,7 @@ and send the exit message as a notification."
   "Execute command from minibuffer at the project root in the background.
 Sends the exit message as a notification."
   (interactive)
-  (let ((dir-string (concat (projectile-project-name) " root")))
+  (let ((dir-string (concat (projector-project-name) " root")))
     (projector-run-command-buffer-prompt nil t dir-string)))
 
 ;;;###autoload
@@ -286,7 +317,7 @@ Sends the exit message as a notification."
 (defun projector-open-project-shell ()
   "Use `completing-read' to find or create a `shell-mode' buffer for a project."
   (interactive)
-  (let ((project-path (completing-read "Open project shell: " projectile-known-projects)))
+  (let ((project-path (completing-read "Open project shell: " (projector-known-projects))))
     (with-temp-buffer
       (cd project-path)
       (projector-shell-or-vterm (projector-shell-buffer-name)))))
@@ -310,29 +341,29 @@ Sends the exit message as a notification."
 
 ;;;###autoload
 (defun projector-switch-project-run-shell-command ()
-  "Switch to another `projectile' project and run a shell command
+  "Switch to another project and run a shell command
 from that project's root."
   (interactive)
-  (let ((project-path (completing-read "Switch to project: " projectile-known-projects)))
-    (projectile-with-default-dir project-path
+  (let ((project-path (completing-read "Switch to project: " (projector-known-projects))))
+    (let ((default-directory project-path))
       (call-interactively 'projector-run-shell-command-project-root))))
 
 ;;;###autoload
 (defun projector-switch-project-run-shell-command-background ()
-  "Switch to another `projectile' project and run a shell command
+  "Switch to another project and run a shell command
 in the background from that project's root."
   (interactive)
-  (let ((project-path (completing-read "Switch to project: " projectile-known-projects)))
-    (projectile-with-default-dir project-path
+  (let ((project-path (completing-read "Switch to project: " (projector-known-projects))))
+    (let ((default-directory project-path))
       (call-interactively 'projector-run-shell-command-project-root-background))))
 
 ;;;###autoload
 (defun projector-switch-project-run-default-shell-command ()
-  "Switch to another `projectile' project and run the default
+  "Switch to another project and run the default
 shell command from that project's root."
   (interactive)
-  (let ((project-path (completing-read "Switch to project: " projectile-known-projects)))
-    (projectile-with-default-dir project-path
+  (let ((project-path (completing-read "Switch to project: " (projector-known-projects))))
+    (let ((default-directory project-path))
       (call-interactively 'projector-run-default-shell-command))))
 
 (provide 'projector)
